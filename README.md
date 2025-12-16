@@ -108,6 +108,13 @@ cd frontend && pnpm run dev
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 👨‍💻 Developer
+
+**[@sandikodev](https://twitter.com/sandikodev)** - Full-stack developer passionate about AI and video technology
+
+- 🐦 Twitter: [@sandikodev](https://twitter.com/sandikodev)
+- 🎵 TikTok: [@sandikodev](https://tiktok.com/@sandikodev)
+
 ## 🙏 Acknowledgments
 
 - **AdonisJS** - Robust Node.js framework
@@ -117,4 +124,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for the creator economy**
+**Built with ❤️ for the creator economy by [@sandikodev](https://twitter.com/sandikodev)**
