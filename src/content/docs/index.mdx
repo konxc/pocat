@@ -1,0 +1,97 @@
+---
+title: Pocat - AI Video Clipper
+description: Transform long YouTube videos into engaging clips with powerful AI-driven processing and multiple download options.
+template: splash
+hero:
+  tagline: 🎬 Transform long YouTube videos into engaging clips with AI-powered processing
+  image:
+    file: ../../assets/houston.webp
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+      variant: primary
+    - text: View API Docs
+      link: /api/overview/
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why Choose Pocat?
+
+<CardGrid stagger>
+	<Card title="🚀 Multiple Downloaders" icon="rocket">
+		Support for yt-dlp, YouTube API, ytdl-core, and Puppeteer with intelligent fallback system.
+	</Card>
+	<Card title="🎯 Quality Options" icon="setting">
+		Download videos from 144p to 4K resolution with optimized file sizes for your needs.
+	</Card>
+	<Card title="⚡ Fast & Reliable" icon="approve-check">
+		95%+ success rate with yt-dlp downloader and speeds up to 90 MB/s.
+	</Card>
+	<Card title="🔐 Compliance Ready" icon="information">
+		Built with YouTube API integration path for legal compliance and user consent.
+	</Card>
+</CardGrid>
+
+## Quick Start
+
+Get up and running with Pocat in minutes:
+
+```bash
+# Download any YouTube video
+curl -X POST https://api.pocat.io/v2/projects \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "My Video Project",
+    "youtubeUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
+    "userId": 1,
+    "downloader": "yt-dlp"
+  }'
+```
+
+## Live Demo
+
+Try our live API endpoint:
+- **API Base**: `https://nonimitating-corie-extemporary.ngrok-free.dev`
+- **Test Videos**: Available for immediate testing
+- **Documentation**: Complete API reference included
+
+## Key Features
+
+### 🎬 Video Processing
+- **Multi-format support**: MP4, WebM, and more
+- **Quality selection**: From mobile-friendly 360p to ultra-HD 4K
+- **Metadata extraction**: Title, duration, thumbnails, and channel info
+- **Batch processing**: Handle multiple videos efficiently
+
+### 🔧 Developer Friendly
+- **RESTful API**: Clean, intuitive endpoints
+- **TypeScript**: Full type safety and IntelliSense support
+- **CORS enabled**: Ready for web integration
+- **Comprehensive docs**: Every endpoint documented with examples
+
+### 🛡️ Enterprise Ready
+- **Rate limiting**: Built-in protection and quotas
+- **Error handling**: Detailed error responses and retry logic
+- **Monitoring**: Built-in logging and performance metrics
+- **Scalable**: Designed for high-volume processing
+
+## Architecture
+
+Pocat is built with modern technologies:
+
+- **Backend**: AdonisJS (Node.js/TypeScript)
+- **Database**: SQLite (development) / Turso (production)
+- **Video Processing**: FFmpeg with multiple downloader engines
+- **Deployment**: Docker-ready with CI/CD support
+
+## Community & Support
+
+- **GitHub**: [konxc/pocat](https://github.com/konxc/pocat)
+- **API Repository**: [konxc/pocat-api](https://github.com/konxc/pocat-api)
+- **Issues**: Report bugs and request features
+- **Contributions**: We welcome pull requests!
+
+Ready to transform your video workflow? [Get started now →](/getting-started/introduction/)
