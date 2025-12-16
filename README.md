@@ -12,7 +12,7 @@ Official documentation site for Pocat - a powerful YouTube video downloader with
 
 ## 📖 Documentation
 
-Visit our documentation site at: [pocat-docs.github.io](https://your-username.github.io/pocat)
+Visit our documentation site at: [pocat-dev.github.io](https://pocat-dev.github.io/)
 
 ## 🛠️ Development
 
@@ -41,5 +41,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Related
 
-- [Pocat Main Repository](https://github.com/your-username/pocat) - The main Pocat application
-- [API Documentation](https://your-username.github.io/pocat/api/overview) - Complete API reference
+- [Pocat Main Repository](https://github.com/pocat-dev/pocat) - The main Pocat application
+- [API Documentation](https://pocat-dev.github.io/api/overview) - Complete API reference

@@ -4,22 +4,72 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://konxc.github.io',
-	base: process.env.NODE_ENV === 'production' ? '/pocat' : '/',
+	site: 'https://pocat-dev.github.io',
+	base: '/',
 	integrations: [
 		starlight({
 			title: 'Pocat Documentation',
 			description: '🎬 AI Video Clipper - Transform long YouTube videos into engaging clips',
+			favicon: '/favicon.ico',
+			logo: {
+				src: './src/assets/pocat-logo.svg',
+				replacesTitle: true,
+			},
+			customCss: [
+				'./src/styles/custom.css',
+			],
+			head: [
+				{
+					tag: 'link',
+					attrs: {
+						rel: 'icon',
+						type: 'image/png',
+						sizes: '32x32',
+						href: '/favicon-32x32.png',
+					},
+				},
+				{
+					tag: 'link',
+					attrs: {
+						rel: 'icon',
+						type: 'image/png',
+						sizes: '16x16',
+						href: '/favicon-16x16.png',
+					},
+				},
+				{
+					tag: 'link',
+					attrs: {
+						rel: 'apple-touch-icon',
+						sizes: '180x180',
+						href: '/apple-touch-icon.png',
+					},
+				},
+				{
+					tag: 'link',
+					attrs: {
+						rel: 'manifest',
+						href: '/site.webmanifest',
+					},
+				},
+				{
+					tag: 'meta',
+					attrs: {
+						name: 'theme-color',
+						content: '#3b82f6',
+					},
+				},
+			],
 			social: [
 				{ 
 					icon: 'github', 
 					label: 'GitHub', 
-					href: 'https://github.com/konxc/pocat' 
+					href: 'https://github.com/pocat-dev/pocat-dev' 
 				},
 				{
 					icon: 'github',
 					label: 'API Repository',
-					href: 'https://github.com/konxc/pocat-api'
+					href: 'https://github.com/pocat-dev/pocat-api'
 				}
 			],
 			sidebar: [

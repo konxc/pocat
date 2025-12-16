@@ -5,7 +5,9 @@ template: splash
 hero:
   tagline: 🎬 Transform long YouTube videos into engaging clips with AI-powered processing
   image:
-    file: ../../assets/houston.webp
+    file: ../../assets/pocat-maskot-studio.png
+    alt: Pocat Studio Mascot
+    html: <img src="../../assets/pocat-maskot-studio.png" alt="Pocat Studio Mascot" class="main-mascot" />
   actions:
     - text: Get Started
       link: /getting-started/introduction/
@@ -17,6 +19,9 @@ hero:
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
+import FloatingMascots from '../../components/FloatingMascots.astro';
+
+<FloatingMascots />
 
 ## Why Choose Pocat?
 

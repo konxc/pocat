@@ -1,0 +1,30 @@
+/* Custom styles for Pocat documentation */
+
+/* Larger hero image with animation */
+.hero .sl-flex img,
+.main-mascot {
+  max-width: 500px !important;
+  width: 100% !important;
+  height: auto !important;
+  animation: float-main 5s ease-in-out infinite !important;
+}
+
+/* Specific selector for main mascot */
+img[alt="Pocat Studio Mascot"] {
+  animation: float-main 5s ease-in-out infinite !important;
+}
+
+@keyframes float-main {
+  0%, 100% { 
+    transform: translateY(0px) scale(1); 
+  }
+  50% { 
+    transform: translateY(-12px) scale(1.02); 
+  }
+}
+
+@media (max-width: 768px) {
+  .hero .sl-flex img {
+    max-width: 350px !important;
+  }
+}
