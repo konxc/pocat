@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant F as Frontend (React)
+    participant F as Frontend
     participant API as Backend API
     participant DB as Database
     participant VP as Video Processor
@@ -13,82 +13,60 @@ sequenceDiagram
 
     Note over U,FS: YouTube Import Process Flow
 
-    %% Step 1: User Input
     U->>F: 1. Paste YouTube URL
-    U->>F: 2. Click "Import" button
+    U->>F: 2. Click Import button
     
-    %% Step 2: Frontend Processing
     F->>F: 3. Validate URL
     F->>F: 4. Set loading state
-    Note over F: setIsImporting(true)<br/>setImportStatus("Initializing...")
+    Note over F: setIsImporting(true)
     
-    %% Step 3: API Call
     F->>API: 5. POST /v2/projects
-    Note over F,API: {<br/>  title: "Project...",<br/>  youtubeUrl: "https://...",<br/>  userId: 1,<br/>  quality: "720p",<br/>  downloader: "auto"<br/>}
+    Note over F,API: Request payload with URL
     
-    %% Step 4: Backend Processing
     API->>VP: 6. getVideoInfo(youtubeUrl)
     VP-->>API: 7. Video metadata
-    Note over VP,API: {<br/>  title, duration,<br/>  thumbnail, format<br/>}
+    Note over VP,API: title, duration, thumbnail
     
     API->>DB: 8. Create VideoProject
-    DB-->>API: 9. Project created (ID: 123)
+    DB-->>API: 9. Project created
     
-    %% Step 5: Background Download
     API->>VP: 10. downloadVideoAsync()
-    Note over API,VP: Background process starts
+    Note over API,VP: Background process
     API-->>F: 11. Immediate response
-    Note over API,F: {<br/>  success: true,<br/>  projectId: 123,<br/>  status: "downloading"<br/>}
+    Note over API,F: projectId and status
     
-    %% Step 6: Frontend State Update
     F->>F: 12. Update video state
-    Note over F: setVideoState({<br/>  sourceType: 'youtube',<br/>  thumbnail: videoInfo.thumbnail,<br/>  projectId: 123<br/>})
+    Note over F: Show thumbnail + loading
+    F->>U: 13. Display progress
     
-    F->>U: 13. Show thumbnail + loading
-    
-    %% Step 7: Polling Loop
     loop Every 2 seconds
-        F->>API: 14. GET /v2/projects/123/download-status
+        F->>API: 14. GET download-status
         API->>DB: 15. Check project status
         DB-->>API: 16. Current status
         API-->>F: 17. Status response
-        Note over API,F: {<br/>  readyForEditing: false,<br/>  status: "downloading",<br/>  progress: 45<br/>}
         F->>U: 18. Update progress
     end
     
-    %% Step 8: Download Process (Background)
     par Background Download
         VP->>VP: 19. Try yt-dlp download
-        alt yt-dlp success
-            VP->>FS: 20a. Save video file
-            FS-->>VP: 21a. File saved
-        else yt-dlp fails
-            VP->>VP: 20b. Try ytdl-core
-            alt ytdl-core success
-                VP->>FS: 21b. Save video file
-            else ytdl-core fails
-                VP->>VP: 22b. Try puppeteer
-                VP->>FS: 23b. Save video file
-            end
+        alt Success
+            VP->>FS: 20. Save video file
+            FS-->>VP: 21. File saved
+        else Failure
+            VP->>VP: 22. Try ytdl-core
+            VP->>FS: 23. Save video file
         end
-        
-        VP->>DB: 24. Update project status
-        Note over VP,DB: status = 'completed'<br/>videoFilePath = '/path/to/video.mp4'
+        VP->>DB: 24. Update status completed
     end
     
-    %% Step 9: Download Complete
-    F->>API: 25. GET /v2/projects/123/download-status
+    F->>API: 25. GET download-status
     API->>DB: 26. Check status
-    DB-->>API: 27. readyForEditing: true
-    API-->>F: 28. Download complete!
-    Note over API,F: {<br/>  readyForEditing: true,<br/>  status: "completed",<br/>  video: { source: "fresh" }<br/>}
+    DB-->>API: 27. readyForEditing true
+    API-->>F: 28. Download complete
     
-    %% Step 10: Switch to Video Stream
-    F->>F: 29. Update video state
-    Note over F: setVideoState({<br/>  sourceType: 'backend-stream',<br/>  url: '/v2/projects/123/stream',<br/>  isPlaying: true<br/>})
-    
-    F->>U: 30. Show success + video ready
-    U->>F: 31. Start editing video
+    F->>F: 29. Switch to stream URL
+    Note over F: sourceType backend-stream
+    F->>U: 30. Video ready for editing
 ```
 
 ## 🏗️ Architecture Components
@@ -98,49 +76,38 @@ graph TB
     subgraph "Frontend Layer"
         UI[User Interface]
         VS[Video State]
-        API_CLIENT[API Client]
+        AC[API Client]
     end
     
     subgraph "Backend Layer"
-        ROUTER[Routes Handler]
-        CONTROLLER[Enhanced Projects Controller]
+        RT[Routes Handler]
+        CT[Projects Controller]
         VP[Video Processor]
     end
     
     subgraph "Data Layer"
-        DB[(SQLite Database)]
+        DB[(Database)]
         FS[(File System)]
-        CACHE[(Reference Cache)]
+        CH[(Cache)]
     end
     
-    subgraph "External Services"
+    subgraph "External"
         YT[YouTube API]
-        YTDLP[yt-dlp]
-        YTDL[ytdl-core]
-        PUPPET[Puppeteer]
+        DL[Downloaders]
     end
     
-    %% Frontend Flow
     UI --> VS
-    VS --> API_CLIENT
-    API_CLIENT --> ROUTER
-    
-    %% Backend Flow
-    ROUTER --> CONTROLLER
-    CONTROLLER --> VP
-    CONTROLLER --> DB
-    
-    %% Video Processing
+    VS --> AC
+    AC --> RT
+    RT --> CT
+    CT --> VP
+    CT --> DB
     VP --> YT
-    VP --> YTDLP
-    VP --> YTDL
-    VP --> PUPPET
+    VP --> DL
     VP --> FS
-    VP --> CACHE
-    
-    %% Data Flow
-    DB --> CACHE
-    FS --> CACHE
+    VP --> CH
+    DB --> CH
+    FS --> CH
 ```
 
 ## 🔄 State Transitions
@@ -153,59 +120,57 @@ stateDiagram-v2
     Importing --> Validating : URL validation
     Validating --> Creating : API call
     Creating --> Downloading : Project created
-    Downloading --> Polling : Background download starts
+    Downloading --> Polling : Background starts
     
     state Downloading {
         [*] --> YtDlp
         YtDlp --> YtdlCore : Fallback
         YtdlCore --> Puppeteer : Fallback
-        Puppeteer --> Failed : All methods fail
-        YtDlp --> Success : Download complete
-        YtdlCore --> Success : Download complete
-        Puppeteer --> Success : Download complete
+        Puppeteer --> Failed : All fail
+        YtDlp --> Success : Complete
+        YtdlCore --> Success : Complete
+        Puppeteer --> Success : Complete
     }
     
     Polling --> Downloading : Status check
     Polling --> Ready : Download complete
     Ready --> Streaming : Video available
-    Streaming --> Editing : User starts editing
+    Streaming --> Editing : User starts
     
-    Failed --> Idle : Reset/Retry
+    Failed --> Idle : Reset
     Editing --> Idle : New import
 ```
 
 ## 📱 Frontend Component Flow
 
 ```mermaid
-graph LR
-    subgraph "EditorView Component"
-        INPUT[YouTube URL Input]
-        BUTTON[Import Button]
-        PLAYER[Video Player]
+flowchart LR
+    subgraph "EditorView"
+        A[URL Input]
+        B[Import Button]
+        C[Video Player]
     end
     
-    subgraph "App Component State"
-        YT_LINK[youtubeLink]
-        IS_IMPORTING[isImporting]
-        IMPORT_STATUS[importStatus]
-        VIDEO_STATE[videoState]
+    subgraph "App State"
+        D[youtubeLink]
+        E[isImporting]
+        F[videoState]
     end
     
-    subgraph "API Services"
-        CREATE_PROJECT[createProject()]
-        GET_STATUS[getProjectDownloadStatus()]
+    subgraph "Services"
+        G[createProject]
+        H[getStatus]
     end
     
-    INPUT --> YT_LINK
-    BUTTON --> IS_IMPORTING
-    IS_IMPORTING --> CREATE_PROJECT
-    CREATE_PROJECT --> IMPORT_STATUS
-    IMPORT_STATUS --> GET_STATUS
-    GET_STATUS --> VIDEO_STATE
-    VIDEO_STATE --> PLAYER
+    A --> D
+    B --> E
+    E --> G
+    G --> H
+    H --> F
+    F --> C
 ```
 
-## 🗄️ Database Schema Flow
+## 🗄️ Database Schema
 
 ```mermaid
 erDiagram
@@ -246,79 +211,131 @@ erDiagram
     VIDEO_PROJECTS }o--|| VIDEO_REFERENCES : "references"
 ```
 
-## 🚀 Performance Optimization Flow
+## 🚀 Performance Flow
 
 ```mermaid
-graph TD
-    START[YouTube URL Input] --> CHECK_CACHE{Check Reference Cache}
+flowchart TD
+    A[YouTube URL Input] --> B{Check Cache}
     
-    CHECK_CACHE -->|Cache Hit| INSTANT[Instant Access]
-    CHECK_CACHE -->|Cache Miss| DOWNLOAD[Start Download]
+    B -->|Hit| C[Instant Access]
+    B -->|Miss| D[Start Download]
     
-    INSTANT --> READY[Video Ready]
+    C --> E[Video Ready]
     
-    DOWNLOAD --> YTDLP{Try yt-dlp}
-    YTDLP -->|Success| SAVE[Save to Storage]
-    YTDLP -->|Fail| YTDL{Try ytdl-core}
+    D --> F{Try yt-dlp}
+    F -->|Success| G[Save File]
+    F -->|Fail| H{Try ytdl-core}
     
-    YTDL -->|Success| SAVE
-    YTDL -->|Fail| PUPPET{Try Puppeteer}
+    H -->|Success| G
+    H -->|Fail| I{Try Puppeteer}
     
-    PUPPET -->|Success| SAVE
-    PUPPET -->|Fail| ERROR[Download Failed]
+    I -->|Success| G
+    I -->|Fail| J[Download Failed]
     
-    SAVE --> CREATE_REF[Create Reference]
-    CREATE_REF --> UPDATE_DB[Update Database]
-    UPDATE_DB --> READY
+    G --> K[Create Reference]
+    K --> L[Update Database]
+    L --> E
     
-    READY --> STREAM[Stream to Frontend]
-    STREAM --> EDIT[User Can Edit]
+    E --> M[Stream to Frontend]
+    M --> N[User Can Edit]
 ```
 
-## 📊 API Response Flow
+## 📊 API Response Structure
 
 ```mermaid
 graph LR
-    subgraph "POST /v2/projects Response"
-        CREATE_RESP["{<br/>success: true,<br/>projectId: 123,<br/>status: 'downloading',<br/>videoInfo: {...}<br/>}"]
+    subgraph "Create Project"
+        A["POST /v2/projects<br/>{success: true<br/>projectId: 123<br/>status: downloading}"]
     end
     
-    subgraph "GET /v2/projects/123/download-status"
-        STATUS_RESP["{<br/>readyForEditing: false,<br/>status: 'downloading',<br/>progress: 45,<br/>video: null<br/>}"]
+    subgraph "Status Polling"
+        B["GET /download-status<br/>{readyForEditing: false<br/>progress: 45<br/>status: downloading}"]
         
-        COMPLETE_RESP["{<br/>readyForEditing: true,<br/>status: 'completed',<br/>progress: 100,<br/>video: {source: 'fresh'}<br/>}"]
+        C["GET /download-status<br/>{readyForEditing: true<br/>progress: 100<br/>status: completed}"]
     end
     
-    CREATE_RESP --> STATUS_RESP
-    STATUS_RESP --> STATUS_RESP
-    STATUS_RESP --> COMPLETE_RESP
+    A --> B
+    B --> B
+    B --> C
 ```
 
-## 🎯 Error Handling Flow
+## 🎯 Error Handling
 
 ```mermaid
-graph TD
-    ERROR_START[Error Occurs] --> ERROR_TYPE{Error Type}
+flowchart TD
+    A[Error Occurs] --> B{Error Type}
     
-    ERROR_TYPE -->|Invalid URL| URL_ERROR[Show URL validation error]
-    ERROR_TYPE -->|Network Error| NETWORK_ERROR[Show connection error]
-    ERROR_TYPE -->|Download Failed| DOWNLOAD_ERROR[Try alternative downloader]
-    ERROR_TYPE -->|Server Error| SERVER_ERROR[Show server error]
+    B -->|Invalid URL| C[URL Error]
+    B -->|Network| D[Connection Error]
+    B -->|Download Failed| E[Try Fallback]
+    B -->|Server Error| F[Server Error]
     
-    URL_ERROR --> RESET[Reset form]
-    NETWORK_ERROR --> RETRY[Offer retry]
-    DOWNLOAD_ERROR --> FALLBACK[Use fallback method]
-    SERVER_ERROR --> SUPPORT[Show support contact]
+    C --> G[Reset Form]
+    D --> H[Retry Option]
+    E --> I[Alternative Method]
+    F --> J[Support Contact]
     
-    RETRY --> ERROR_START
-    FALLBACK --> ERROR_START
-    RESET --> IDLE[Return to idle state]
-    SUPPORT --> IDLE
+    H --> A
+    I --> A
+    G --> K[Return to Idle]
+    J --> K
+```
+
+## 🔧 Technical Implementation
+
+### **Frontend State Management**
+```typescript
+// Video state transitions
+const [videoState, setVideoState] = useState({
+  sourceType: 'youtube',     // Initial state
+  thumbnail: videoInfo.thumbnail,
+  projectId: projectId
+})
+
+// After download complete
+setVideoState(prev => ({
+  ...prev,
+  sourceType: 'backend-stream',  // Switch to stream
+  url: `/v2/projects/${projectId}/stream`,
+  isPlaying: true
+}))
+```
+
+### **Backend Download Process**
+```typescript
+// Background download with fallback
+switch (downloader) {
+  case 'yt-dlp':
+    result = await tryYtDlpDownload(url, projectId, quality)
+    break
+  case 'ytdl-core':
+    result = await tryYtdlCoreDownload(url, projectId, quality)
+    break
+  case 'auto':
+  default:
+    result = await downloadVideo(url, projectId, quality)
+    break
+}
+```
+
+### **Polling Mechanism**
+```typescript
+// Frontend polling every 2 seconds
+const pollInterval = setInterval(async () => {
+  const statusRes = await getProjectDownloadStatus(backendUrl, projectId)
+  
+  if (statusRes.success && statusRes.data.readyForEditing) {
+    clearInterval(pollInterval)
+    // Switch to video stream
+    const streamUrl = `${baseUrl}/v2/projects/${projectId}/stream`
+    setVideoState(prev => ({ ...prev, url: streamUrl }))
+  }
+}, 2000)
 ```
 
 ---
 
-**Diagram Version**: 1.0  
-**Created**: December 18, 2025  
-**Components**: Frontend (React) + Backend (AdonisJS) + Video Processing  
-**Flow Type**: YouTube Import & Download Process
+**Diagram Version**: 2.0  
+**Updated**: December 18, 2025  
+**Status**: ✅ GitHub Compatible Mermaid Syntax  
+**Components**: All diagrams tested and validated
